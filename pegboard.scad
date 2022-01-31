@@ -2,6 +2,7 @@
  * pegboard.scad - library for generating pegboard and grids of pegs/holes
  *
  * Copyright 2019 Craig Ringer <ringerc@ringerc.id.au>
+ * Copyright 2022 Jacob Hrbek <kreyren@rixotstudio.cz>
  *
  * BSD Licensed
  */
@@ -10,11 +11,11 @@
 negative = false;
 
 // Length (mm) of board section (x axis)
-p_board_length = 120;
+p_board_length = 200;
 // Width (mm) of board section (y axis)
-p_board_width = 21;
+p_board_width = 200;
 // Depth (mm) of board section (z axis)
-p_board_thickness = 3;
+p_board_thickness = 2;
 
 // Diameter of holes in board
 p_hole_diameter = 4.0;
@@ -25,6 +26,9 @@ p_hole_hexpattern = true;
 
 // Margins around the edges of the board where no holes should be placed. Can be a 2-array [x,y] or a scalar. Actual margins will be slightly larger because the hole grid will get centered.
 p_beam_margins = p_hole_pitch/2;
+
+// Mounting solution used to e.g. connect two peg boards together or to the wall, not used by default
+p_mount_solution = "none";
 
 /*
  * Example usage:
@@ -194,16 +198,75 @@ module peg_grid(dims, peg_diameter, peg_pitch, hexpattern=true, margins=0, cente
     children();
 }
 
+/*
+ * Module generating a mounting solution for the board so that it can be mounted to e.g. a wall and/or to each other
+ */
+module p_board_mount(solution) {
+    spacing = 40;
 
+    /*
+     * The original 
+     */
+     if (solution == "original") {
+        difference() {
+            // Quadrilateral 
+            translate([0,0,p_board_thickness]) {
+                rotate([90,0,90]) {
+                    linear_extrude(p_board_length) {
+                        polygon(
+                            points = [
+                               //x,y
+                                [0, 0],
+                                [10, 0],
+                                [15, 10],
+                                [0, 10]
+                            ]
+                        );
+                    }
+                }
+            }
+            // Remove the edges so that the mounts can fit together
+            translate([0-0.01,0-0.01,p_board_thickness-0.01]) {
+                cube(spacing);
+            }
+            translate([p_board_length-spacing+0.01,0-0.01,p_board_thickness-0.01]) {
+                cube(spacing);
+            }
+            // Material optimizations
+            /// Cutting out the middle
+            translate([p_board_length*0.50-spacing+0.01,0-0.01,p_board_thickness-0.01]) {
+                cube([p_board_length*0.40,spacing,spacing]);
+            }
+        }
+    }
+}
+
+// DNM(Krey): Used for development do not merge
+p_mount_solution = "original";
 
 if (negative) {
     peg_grid([p_board_length, p_board_width, p_board_thickness],
                 p_hole_diameter, p_hole_pitch, p_hole_hexpattern,
                 p_beam_margins);
-}
-else
-{
+} else {
     pegboard([p_board_length, p_board_width, p_board_thickness],
             p_hole_diameter, p_hole_pitch, p_hole_hexpattern,
             p_beam_margins);
+
+    p_board_mount(p_mount_solution);
+    translate([0,200,0]) {
+        mirror([0,1,0]) {
+            p_board_mount(p_mount_solution);
+        }
+    }
+    translate([200,0,0]) {
+        rotate([0,0,90]) {
+            p_board_mount(p_mount_solution);
+        }
+    }
+    translate([0,200,0]) {
+        rotate([0,0,-90]) {
+            p_board_mount(p_mount_solution);
+        }
+    }
 }
