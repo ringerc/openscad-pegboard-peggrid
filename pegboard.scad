@@ -216,10 +216,10 @@ module p_board_mount(solution) {
                         polygon(
                             points = [
                                //x,y
-                                [0, 0],
-                                [10, 0],
-                                [15, 10],
-                                [0, 10]
+                                [0,0],
+                                [2.5,0],
+                                [5,5],
+                                [0,5]
                             ]
                         );
                     }
@@ -248,11 +248,13 @@ if (negative) {
     peg_grid([p_board_length, p_board_width, p_board_thickness],
                 p_hole_diameter, p_hole_pitch, p_hole_hexpattern,
                 p_beam_margins);
+    // TODO-Q(Krey): Should we define mounting-relevant thing here?
 } else {
     pegboard([p_board_length, p_board_width, p_board_thickness],
             p_hole_diameter, p_hole_pitch, p_hole_hexpattern,
             p_beam_margins);
 
+    // TODO-QA(Krey): Looks ugly
     p_board_mount(p_mount_solution);
     translate([0,200,0]) {
         mirror([0,1,0]) {
