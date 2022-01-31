@@ -15,7 +15,7 @@ p_board_length = 200;
 // Width (mm) of board section (y axis)
 p_board_width = 200;
 // Depth (mm) of board section (z axis)
-p_board_thickness = 2;
+p_board_thickness = 1;
 
 // Diameter of holes in board
 p_hole_diameter = 4.0;
@@ -241,8 +241,39 @@ module p_board_mount(solution) {
     }
 }
 
+// Module used to generate a connector for the mounting solution above
+module p_board_connector(solution) {
+    /*
+     * The connector for the original mounting solution
+     * Designed in FreeCAD's sketch which is provided in the repository
+     * Spacing was decided on 0.3mm
+     */
+    if(solution == "original") {
+        translate([0,-20,10]) {
+                rotate([90,180,90]) {
+                    linear_extrude(p_board_length) {
+                        polygon(
+                            points = [
+                                //x,y
+                                [-2.8,0],
+                                [-7.8,0],
+                                [-15.3633,10.30],
+                                [15.3633,10.30],
+                                [7.8,0],
+                                [2.8,0],
+                                [5.48858,5.3],
+                                [-5.48858,5.3],
+                            ]
+                        );
+                    }
+                }
+            }
+    }
+}
+
 // DNM(Krey): Used for development do not merge
 p_mount_solution = "original";
+p_board_connector("original");
 
 if (negative) {
     peg_grid([p_board_length, p_board_width, p_board_thickness],
